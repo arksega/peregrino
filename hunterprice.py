@@ -47,7 +47,7 @@ class JSONTranslator(object):
         if 'result' not in req.context:
             return
 
-        resp.body = json.dumps(req.context['result'])
+        resp.body = json.dumps(req.context['result'], default=model.entity2dict)
 
 
 class UsersResource:
@@ -57,10 +57,7 @@ class UsersResource:
         self.lg = logging.getLogger('hunterprice.' + __name__)
 
     def on_get(self, req, resp):
-        data = []
-        for u in self.session.query(model.user).all():
-            data.append(model.entity2dict(u))
-        resp.context['result'] = data
+        req.context['result'] = self.session.query(model.User).all()
 
 
 class UserResource:
@@ -73,7 +70,7 @@ class UserResource:
         user = self.session.query(model.User).filter_by(email=email).first()
         if user is None:
             raise falcon.errors.HTTPNotFound()
-        req.context['result'] = model.entity2dict(user)
+        req.context['result'] = user
 
 
 class UserListsResource:
@@ -85,11 +82,7 @@ class UserListsResource:
         user = self.session.query(model.User).filter_by(email=email).first()
         if user is None:
             raise falcon.errors.HTTPNotFound()
-        data = []
-        for l in user.lists:
-            data.append(model.entity2dict(l))
-
-        req.context['result'] = data
+        req.context['result'] = user.lists
 
     def on_post(self, req, resp, email):
         user = self.session.query(model.User).filter_by(email=email).first()
@@ -104,8 +97,7 @@ class UserListsResource:
         self.session.add(list_)
         self.session.commit()
         list_.id
-        print('>><<', model.entity2dict(list_))
-        req.context['result'] = model.entity2dict(list_)
+        req.context['result'] = list_
 
 
 class UserListResource:
@@ -127,7 +119,7 @@ class UserListResource:
             raise falcon.errors.HTTPNotFound()
 
         list_.products
-        req.context['result'] = model.entity2dict(list_)
+        req.context['result'] = list_
 
 
 class ProductsResource:
@@ -136,11 +128,7 @@ class ProductsResource:
         self.session = session
 
     def on_get(self, req, resp):
-        products = self.session.query(model.Product).all()
-        data = []
-        for p in products:
-            data.append(model.entity2dict(p))
-        req.context['result'] = data
+        req.context['result'] = self.session.query(model.Product).all()
 
     def on_post(self, req, resp):
         data = req.context['data']
@@ -148,7 +136,7 @@ class ProductsResource:
         self.session.add(product)
         self.session.commit()
         product.id
-        req.context['result'] = model.entity2dict(product)
+        req.context['result'] = product
 
 FORMAT = '%(asctime)-15s %(clientip)s %(user)-8s %(message)s'
 logging.basicConfig(format=FORMAT)

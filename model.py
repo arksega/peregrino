@@ -46,13 +46,6 @@ class Product(Base):
     amount = Column(Integer)
 
 
-# class ListsProducts(Base):
-#     __tablename__ = 'listsproducts'
-#
-#     list_id = Column(Integer, ForeignKey('lists.id'))
-#     product_id = Column(Integer, ForeignKey('products.id'))
-
-
 def defaut_session():
     engine = create_engine('postgresql://hunter:price@localhost/hunter')
     Base.metadata.create_all(engine)
@@ -61,13 +54,16 @@ def defaut_session():
 
 
 def entity2dict(entity):
-    r = {}
-    for k, v in entity.__dict__.items():
-        if k[0] != '_':
-            if isinstance(v, datetime.datetime):
-                v = v.strftime('%y-%m-%dT%H:%M:%S')
-            r[k] = v
-    return r
+    if isinstance(entity, Base):
+        r = {}
+        for k, v in entity.__dict__.items():
+            if k[0] != '_':
+                if isinstance(v, datetime.datetime):
+                    v = v.strftime('%y-%m-%dT%H:%M:%S')
+                r[k] = v
+        return r
+    else:
+        return entity
 
 
 def entity2json(entity):
