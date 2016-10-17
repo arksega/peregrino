@@ -118,6 +118,32 @@ class UserListResource:
         list_.products
         req.context['result'] = list_
 
+    def on_put(self, req, resp, email, lid):
+        lid = int(lid)
+        user = self.session.query(model.User).filter_by(email=email).first()
+        if user is None:
+            raise falcon.errors.HTTPNotFound()
+        try:
+            list_ = [l for l in user.lists if l.id == lid][0]
+        except IndexError:
+            raise falcon.errors.HTTPNotFound()
+
+        data = req.context['data']
+        if 'products' in data.keys():
+            products = data['products']
+            query = self.session.query(model.Product)
+            eproducts = query.filter(model.Product.id.in_(products)).all()
+            if len(products) > len(eproducts):
+                raise falcon.errors.HTTPNotFound()
+
+            list_.products = eproducts
+            del(data['products'])
+        for k, v in data.items():
+            setattr(list_, k, v)
+        self.session.commit()
+        list_.products
+        req.context['result'] = list_
+
 
 class ProductsResource:
 
