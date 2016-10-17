@@ -109,13 +109,10 @@ class UserListResource:
         lid = int(lid)
         user = self.session.query(model.User).filter_by(email=email).first()
         if user is None:
-            raise falcon.errors.HTTPNotFound('User not found')
-        list_ = None
-        for l in user.lists:
-            if l.id == lid:
-                list_ = l
-                break
-        if list_ is None:
+            raise falcon.errors.HTTPNotFound()
+        try:
+            list_ = [l for l in user.lists if l.id == lid][0]
+        except IndexError:
             raise falcon.errors.HTTPNotFound()
 
         list_.products
