@@ -160,14 +160,19 @@ class ProductsResource:
         product.id
         req.context['result'] = product
 
+
+def create():
+    db_session = model.defaut_session()
+    api = falcon.API(middleware=[RequireJSON(), JSONTranslator()])
+    api.add_route('/users', UsersResource(db_session))
+    api.add_route('/users/{email}', UserResource(db_session))
+    api.add_route('/users/{email}/lists', UserListsResource(db_session))
+    api.add_route('/users/{email}/lists/{lid}', UserListResource(db_session))
+    api.add_route('/products', ProductsResource(db_session))
+    return api
+
+
 FORMAT = '%(asctime)-15s %(clientip)s %(user)-8s %(message)s'
 logging.basicConfig(format=FORMAT)
 
-db_session = model.defaut_session()
-api = falcon.API(middleware=[RequireJSON(), JSONTranslator()])
-api.add_route('/users', UsersResource(db_session))
-api.add_route('/users/{email}', UserResource(db_session))
-api.add_route('/users/{email}/lists', UserListsResource(db_session))
-api.add_route('/users/{email}/lists/{lid}', UserListResource(db_session))
-api.add_route('/products', ProductsResource(db_session))
-application = api
+application = create()
