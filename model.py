@@ -31,7 +31,7 @@ class List(Base):
     description = Column(String)
     creation_time = Column(DateTime, default=func.now())
 
-    products = relationship('Product', secondary=l_p)
+    products = relationship('Product', secondary=l_p, cascade="all")
 
 User.lists = relationship('List', order_by=List.id)
 
@@ -64,10 +64,6 @@ def entity2dict(entity):
         return r
     else:
         return entity
-
-
-def entity2json(entity):
-    return json.dumps(entity2dict(entity))
 
 
 if __name__ == '__main__':
