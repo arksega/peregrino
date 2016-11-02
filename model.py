@@ -53,6 +53,13 @@ def defaut_session():
     return Session()
 
 
+def testing_session():
+    engine = create_engine('sqlite://')
+    Base.metadata.create_all(engine)
+    Session = sessionmaker(bind=engine)
+    return Session()
+
+
 def entity2dict(entity):
     if isinstance(entity, Base):
         r = {}

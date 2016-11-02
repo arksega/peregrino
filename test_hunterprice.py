@@ -9,7 +9,7 @@ class MyTestCase(testing.TestCase):
     def setUp(self):
         super(MyTestCase, self).setUp()
 
-        self.db_session = model.defaut_session()
+        self.db_session = model.testing_session()
         self.usermail = 'a@b.com'
         self.user = {'name': 'ark', 'password': '1234', 'email': self.usermail}
 
@@ -40,7 +40,7 @@ class MyTestCase(testing.TestCase):
         self.db_session.commit()
         self.product['id'] = product.id
 
-        self.app = hunterprice.create()
+        self.app = hunterprice.create_api(self.db_session)
 
     def tearDown(self):
         self.db_session.query(model.List).delete()
