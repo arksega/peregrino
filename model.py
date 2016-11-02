@@ -46,7 +46,7 @@ class Product(Base):
     amount = Column(Integer)
 
 
-def defaut_session():
+def defaut_session():  # pragma: no cover
     engine = create_engine('postgresql://hunter:price@localhost/hunter')
     Base.metadata.create_all(engine)
     Session = sessionmaker(bind=engine)
@@ -69,17 +69,5 @@ def entity2dict(entity):
                     v = v.strftime('%y-%m-%dT%H:%M:%S')
                 r[k] = v
         return r
-    else:
+    else:  # pragma: no cover
         return entity
-
-
-if __name__ == '__main__':
-    engine = create_engine('postgresql://hunter:price@localhost/hunter')
-    print(engine)
-
-    Base.metadata.create_all(engine)
-    user = User(name='ark', email='arksega@gmail.com', password='124dfcab3')
-    Session = sessionmaker(bind=engine)
-    session = Session()
-    session.add(user)
-    session.commit()
