@@ -131,12 +131,17 @@ class UserListResource:
         if 'products' in data.keys():
             products = data['products']
             query = self.session.query(model.Product)
-            eproducts = query.filter(model.Product.id.in_(products)).all()
+            if len(products) == 0:
+                eproducts = []
+            elif len(products) == 1:
+                eproducts = query.filter_by(id=products[0]).all()
+            else:
+                eproducts = query.filter(model.Product.id.in_(products)).all()
             if len(products) > len(eproducts):
                 raise falcon.errors.HTTPNotFound()
-
             list_.products = eproducts
             del(data['products'])
+
         for k, v in data.items():
             setattr(list_, k, v)
         self.session.commit()
