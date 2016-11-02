@@ -40,6 +40,17 @@ class MyTestCase(testing.TestCase):
         self.db_session.commit()
         self.product['id'] = product.id
 
+        self.product2 = {
+            'name': 'milk',
+            'unit': 'ml',
+            'amount': '1500',
+            'description': 'Cow legacy'
+        }
+        product = model.Product(**self.product2)
+        self.db_session.add(product)
+        self.db_session.commit()
+        self.product2['id'] = product.id
+
         self.app = hunterprice.create_api(self.db_session)
 
     def tearDown(self):
@@ -126,9 +137,22 @@ class TestHunterPrice(MyTestCase):
             uri, body=json.dumps(payload), headers=headers)
         self.assertEqual(result.status_code, 404)
 
+    def test_put_list_multiple_products(self):
+        uri = '/users/{}/lists/{}'.format(self.usermail, self.list['id'])
+        payload = {
+            'id': self.list['id'],
+            'owner': self.user['id'],
+            'name': 'list 4',
+            'products': [self.product['id'], self.product2['id']],
+            'description': 'Fiesta!'}
+        headers = {'content-type': 'application/json'}
+        result = self.simulate_put(
+            uri, body=json.dumps(payload), headers=headers)
+        self.assertEqual(result.status_code, 200)
+
     def test_get_products(self):
         result = self.simulate_get('/products')
-        self.assertEqual(len(result.json), 1)
+        self.assertEqual(len(result.json), 2)
 
     def test_post_product(self):
         uri = '/products'
