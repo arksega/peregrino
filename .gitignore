@@ -90,3 +90,6 @@ ENV/
 
 # Postgres data
 data/
+
+# Temporary vim files
+.*swp
