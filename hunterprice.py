@@ -1,8 +1,10 @@
 #!/bin/env python
 import logging
 import falcon
+import config
 import model
 import json
+import jwt
 
 
 class RequireJSON(object):
@@ -25,7 +27,6 @@ class JSONTranslator(object):
     def process_request(self, req, resp):
         # req.stream corresponds to the WSGI wsgi.input environ variable,
         # and allows you to read bytes from the request body.
-        #
         if req.content_length in (None, 0):
             if req.method in ('POST', 'PUT'):
                 raise falcon.HTTPBadRequest('Empty request body',
@@ -47,6 +48,22 @@ class JSONTranslator(object):
             return
 
         resp.body = json.dumps(req.context['result'], default=model.entity2dict)
+
+
+class JWTAuth(object):
+
+    def __init__(self, cfg):
+        self.seed = cfg['communication']['seed']
+
+    def process_request(self, req, resp):
+        try:
+            authstr = req.headers['AUTHORIZATION']
+            _, token = authstr.split()
+            jwt.decode(token, self.seed, algorithms=['HS256'])
+        except KeyError:
+            raise falcon.errors.HTTPBadRequest()
+        except jwt.exceptions.DecodeError:
+            raise falcon.errors.HTTPUnauthorized()
 
 
 class UsersResource:
@@ -167,7 +184,8 @@ class ProductsResource:
 
 
 def create_api(dbs):
-    api = falcon.API(middleware=[RequireJSON(), JSONTranslator()])
+    cfg = config.load()
+    api = falcon.API(middleware=[RequireJSON(), JSONTranslator(), JWTAuth(cfg)])
     api.add_route('/users', UsersResource(dbs))
     api.add_route('/users/{email}', UserResource(dbs))
     api.add_route('/users/{email}/lists', UserListsResource(dbs))
