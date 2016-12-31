@@ -3,7 +3,6 @@ from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 import datetime
-import json
 
 Base = declarative_base()
 
@@ -49,15 +48,15 @@ class Product(Base):
 def defaut_session():  # pragma: no cover
     engine = create_engine('postgresql://hunter:price@localhost/hunter')
     Base.metadata.create_all(engine)
-    Session = sessionmaker(bind=engine)
-    return Session()
+    session = sessionmaker(bind=engine)
+    return session()
 
 
 def testing_session():
     engine = create_engine('sqlite://')
     Base.metadata.create_all(engine)
-    Session = sessionmaker(bind=engine)
-    return Session()
+    session = sessionmaker(bind=engine)
+    return session()
 
 
 def entity2dict(entity):

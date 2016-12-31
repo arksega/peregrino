@@ -78,7 +78,7 @@ class TestHunterPrice(MyTestCase):
         uri = '/users/{}/lists/{}'.format(self.usermail, self.list['id'])
         result = self.simulate_get(uri)
         rj = result.json
-        del(rj['creation_time'])
+        del rj['creation_time']
         self.assertDictEqual(rj, self.list)
 
     def test_post_list(self):
@@ -91,8 +91,8 @@ class TestHunterPrice(MyTestCase):
         result = self.simulate_post(
             uri, body=json.dumps(payload), headers=headers)
         rj = result.json
-        del(rj['id'])
-        del(rj['creation_time'])
+        del rj['id']
+        del rj['creation_time']
         self.assertDictEqual(rj, payload)
 
     def test_put_list(self):
@@ -107,7 +107,7 @@ class TestHunterPrice(MyTestCase):
         result = self.simulate_put(
             uri, body=json.dumps(payload), headers=headers)
         rj = result.json
-        del(rj['creation_time'])
+        del rj['creation_time']
         self.assertDictEqual(rj, payload)
 
     def test_put_list_missing_user(self):
@@ -166,7 +166,7 @@ class TestHunterPrice(MyTestCase):
         result = self.simulate_post(
             uri, body=json.dumps(payload), headers=headers)
         rj = result.json
-        del(rj['id'])
+        del rj['id']
         self.assertDictEqual(rj, payload)
 
     def test_post_negative_content_type(self):

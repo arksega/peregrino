@@ -8,23 +8,23 @@ import jwt
 
 
 class RequireJSON(object):
-
-    def process_request(self, req, resp):
+    @classmethod
+    def process_request(cls, req, resp):
         if not req.client_accepts_json:
             raise falcon.HTTPNotAcceptable(
                 'This API only supports responses encoded as JSON.',
                 href='http://docs.examples.com/api/json')
 
-        if req.method in ('POST', 'PUT'):
-            if 'application/json' not in req.content_type:
-                raise falcon.HTTPUnsupportedMediaType(
-                    'This API only supports requests encoded as JSON.',
-                    href='http://docs.examples.com/api/json')
+        if req.method in ('POST', 'PUT') and\
+                'application/json' not in req.content_type:
+            raise falcon.HTTPUnsupportedMediaType(
+                'This API only supports requests encoded as JSON.',
+                href='http://docs.examples.com/api/json')
 
 
 class JSONTranslator(object):
-
-    def process_request(self, req, resp):
+    @classmethod
+    def process_request(cls, req, resp):
         # req.stream corresponds to the WSGI wsgi.input environ variable,
         # and allows you to read bytes from the request body.
         if req.content_length in (None, 0):
@@ -43,7 +43,8 @@ class JSONTranslator(object):
                                    'JSON was incorrect or not encoded as '
                                    'UTF-8.')
 
-    def process_response(self, req, resp, resource):
+    @classmethod
+    def process_response(cls, req, resp, resource):
         if 'result' not in req.context:
             return
 
@@ -157,7 +158,7 @@ class UserListResource:
             if len(products) > len(eproducts):
                 raise falcon.errors.HTTPNotFound()
             list_.products = eproducts
-            del(data['products'])
+            del data['products']
 
         for k, v in data.items():
             setattr(list_, k, v)
