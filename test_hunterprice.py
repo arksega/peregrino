@@ -12,6 +12,12 @@ class MyTestCase(testing.TestCase):
         self.db_session = model.testing_session()
         self.usermail = 'a@b.com'
         self.user = {'name': 'ark', 'password': '1234', 'email': self.usermail}
+        self.auth_header = {
+            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.\
+e30.t-IDcSemACt8x4iTMCda8Yhe3iZaWbvV5XKSTbuAn0M'}
+        self.bad_auth_header = {
+            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.\
+e30.t-IDcSemACt8x4iTMCda8Yhe3iZaWbvV5XKSTbuAn0X'}
 
         user = model.User(**self.user)
         self.db_session.add(user)
@@ -63,20 +69,23 @@ class MyTestCase(testing.TestCase):
 class TestHunterPrice(MyTestCase):
 
     def test_get_all_users(self):
-        result = self.simulate_get('/users')
+        result = self.simulate_get('/users', headers=self.auth_header)
+        self.assertEqual(result.status_code, 200)
         self.assertEqual(len(result.json), 1)
 
     def test_get_user(self):
-        result = self.simulate_get('/users/{}'.format(self.usermail))
+        uri = '/users/{}'.format(self.usermail)
+        result = self.simulate_get(uri, headers=self.auth_header)
         self.assertEqual(result.json, self.user)
 
     def test_get_all_lists(self):
-        result = self.simulate_get('/users/{}/lists'.format(self.usermail))
+        uri = '/users/{}/lists'.format(self.usermail)
+        result = self.simulate_get(uri, headers=self.auth_header)
         self.assertEqual(len(result.json), 1)
 
     def test_get_list(self):
         uri = '/users/{}/lists/{}'.format(self.usermail, self.list['id'])
-        result = self.simulate_get(uri)
+        result = self.simulate_get(uri, headers=self.auth_header)
         rj = result.json
         del rj['creation_time']
         self.assertDictEqual(rj, self.list)
@@ -88,6 +97,7 @@ class TestHunterPrice(MyTestCase):
             'name': 'list 2',
             'description': 'Lista de compras'}
         headers = {'content-type': 'application/json'}
+        headers.update(self.auth_header)
         result = self.simulate_post(
             uri, body=json.dumps(payload), headers=headers)
         rj = result.json
@@ -104,6 +114,7 @@ class TestHunterPrice(MyTestCase):
             'products': [],
             'description': 'Fiesta!'}
         headers = {'content-type': 'application/json'}
+        headers.update(self.auth_header)
         result = self.simulate_put(
             uri, body=json.dumps(payload), headers=headers)
         rj = result.json
@@ -113,6 +124,7 @@ class TestHunterPrice(MyTestCase):
     def test_put_list_missing_user(self):
         uri = '/users/nomail.com/lists/{}'.format(self.list['id'])
         headers = {'content-type': 'application/json'}
+        headers.update(self.auth_header)
         result = self.simulate_put(
             uri, body=json.dumps({}), headers=headers)
         self.assertEqual(result.status_code, 404)
@@ -120,6 +132,7 @@ class TestHunterPrice(MyTestCase):
     def test_put_list_missing_list(self):
         uri = '/users/{}/lists/-1'.format(self.usermail)
         headers = {'content-type': 'application/json'}
+        headers.update(self.auth_header)
         result = self.simulate_put(
             uri, body=json.dumps({}), headers=headers)
         self.assertEqual(result.status_code, 404)
@@ -133,6 +146,7 @@ class TestHunterPrice(MyTestCase):
             'products': [-1],
             'description': 'Fiesta!'}
         headers = {'content-type': 'application/json'}
+        headers.update(self.auth_header)
         result = self.simulate_put(
             uri, body=json.dumps(payload), headers=headers)
         self.assertEqual(result.status_code, 404)
@@ -146,12 +160,13 @@ class TestHunterPrice(MyTestCase):
             'products': [self.product['id'], self.product2['id']],
             'description': 'Fiesta!'}
         headers = {'content-type': 'application/json'}
+        headers.update(self.auth_header)
         result = self.simulate_put(
             uri, body=json.dumps(payload), headers=headers)
         self.assertEqual(result.status_code, 200)
 
     def test_get_products(self):
-        result = self.simulate_get('/products')
+        result = self.simulate_get('/products', headers=self.auth_header)
         self.assertEqual(len(result.json), 2)
 
     def test_post_product(self):
@@ -163,6 +178,7 @@ class TestHunterPrice(MyTestCase):
             'amount': 750
         }
         headers = {'content-type': 'application/json'}
+        headers.update(self.auth_header)
         result = self.simulate_post(
             uri, body=json.dumps(payload), headers=headers)
         rj = result.json
@@ -176,6 +192,7 @@ class TestHunterPrice(MyTestCase):
             'name': 'list 2',
             'description': 'Lista de compras'}
         headers = {'content-type': 'application/jwt'}
+        headers.update(self.auth_header)
         self.simulate_post(
             uri, body=json.dumps(payload), headers=headers)
         self.assertRaises(falcon.HTTPNotAcceptable)
@@ -198,27 +215,28 @@ class TestHunterPrice(MyTestCase):
         self.assertRaises(falcon.falcon.HTTPNotAcceptable)
 
     def test_get_missing_user(self):
-        self.simulate_get('/users/nomail.com')
+        self.simulate_get('/users/nomail.com', headers=self.auth_header)
         self.assertRaises(falcon.errors.HTTPNotFound)
 
     def test_get_missing_list(self):
         uri = '/users/{}/lists/0'.format(self.usermail)
-        result = self.simulate_get(uri)
+        result = self.simulate_get(uri, headers=self.auth_header)
         self.assertEqual(result.status_code, 404)
 
     def test_get_missing_user_list(self):
         uri = '/users/nomail.com/lists/0'
-        result = self.simulate_get(uri)
+        result = self.simulate_get(uri, headers=self.auth_header)
         self.assertEqual(result.status_code, 404)
 
     def test_get_missing_user_lists(self):
         uri = '/users/nomail.com/lists'
-        result = self.simulate_get(uri)
+        result = self.simulate_get(uri, headers=self.auth_header)
         self.assertEqual(result.status_code, 404)
 
     def test_post_missing_user_lists(self):
         uri = '/users/nomail.com/lists'
         headers = {'content-type': 'application/json'}
+        headers.update(self.auth_header)
         result = self.simulate_post(uri, body=json.dumps({}), headers=headers)
         self.assertEqual(result.status_code, 404)
 
@@ -230,6 +248,15 @@ class TestHunterPrice(MyTestCase):
             'name': 'list 2',
             'description': 'Lista de compras'}
         headers = {'content-type': 'application/json'}
+        headers.update(self.auth_header)
         result = self.simulate_post(
             uri, body=json.dumps(payload), headers=headers)
         self.assertEqual(result.status_code, 400)
+
+    def test_bad_auth_header(self):
+        result = self.simulate_get('/users', headers=self.bad_auth_header)
+        self.assertEqual(len(result.json), 1)
+
+    def test_missing_auth_header(self):
+        result = self.simulate_get('/users')
+        self.assertEqual(len(result.json), 1)
